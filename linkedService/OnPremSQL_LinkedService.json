@@ -4,12 +4,7 @@
 		"annotations": [],
 		"type": "SqlServer",
 		"typeProperties": {
-			"server": "DESKTOP-A4M8DQ8\\SQLEXPRESS",
-			"database": "AdventureWorks2022",
-			"encrypt": "mandatory",
-			"trustServerCertificate": false,
-			"authenticationType": "SQL",
-			"userName": "azsync",
+			"connectionString": "Integrated Security=False;Data Source=DESKTOP-A4M8DQ8\\SQLEXPRESS;Initial Catalog=AdventureWorks2022;User ID=azsync",
 			"password": {
 				"type": "AzureKeyVaultSecret",
 				"store": {
