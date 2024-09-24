@@ -1,0 +1,25 @@
+{
+	"name": "RunPipelineEvery5Min",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "onprem_to_azsql_copy_sync",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Minute",
+				"interval": 6,
+				"startTime": "2024-09-24T17:07:00",
+				"endTime": "2024-09-25T17:49:00",
+				"timeZone": "South Africa Standard Time"
+			}
+		}
+	}
+}
