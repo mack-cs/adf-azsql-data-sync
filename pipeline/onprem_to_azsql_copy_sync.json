@@ -1,0 +1,7 @@
+{
+	"name": "onprem_to_azsql_copy_sync",
+	"properties": {
+		"description": "Pipeline to synchronize data from on-premises databases to Azure SQL, ensuring up-to-date data replication.",
+		"annotations": []
+	}
+}
