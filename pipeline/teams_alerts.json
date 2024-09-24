@@ -5,7 +5,14 @@
 			{
 				"name": "TeamsAlertWebHook",
 				"type": "WebActivity",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "Set Message",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -16,11 +23,28 @@
 				"userProperties": [],
 				"typeProperties": {
 					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json"
+					},
 					"url": "https://mackcsl.webhook.office.com/webhookb2/bed6b26f-1474-4412-8190-873c09ff5b99@bc807e2e-e215-4b63-a4c0-a9b29100a4f0/IncomingWebhook/8b995b6d5c6e47fc9fa528e529772ac4/230833f5-4413-4790-bcf3-ecb08d69f194",
 					"body": {
-						"summary": "Pipelining",
-						"text": "Web Hooked"
+						"value": "@json(variables('messageCard'))",
+						"type": "Expression"
 					}
+				}
+			},
+			{
+				"name": "Set Message",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "messageCard",
+					"value": "{\n    \"@type\": \"MessageCard\",\n    \"@context\": \"http://schema.org/extensions\",\n    \"themeColor\": \"007607\",\n    \"summary\": \"Data Sync Alert\",\n    \"sections\": [\n        {\n            \"title\": \"Pipeline execution alert\",\n            \"facts\": [\n                {\n                    \"name\": \"Pipeline Name:\",\n                    \"value\": \"@{pipeline().parameters.pipeline_name}\"\n                },\n                {\n                    \"name\": \"Message\",\n                    \"value\": \"@{pipeline().parameters.message}\"\n                }\n            ],\n            \"markdown\": true\n        }\n    ]\n}"
 				}
 			}
 		],
@@ -30,6 +54,11 @@
 			},
 			"message": {
 				"type": "string"
+			}
+		},
+		"variables": {
+			"messageCard": {
+				"type": "String"
 			}
 		},
 		"annotations": []
