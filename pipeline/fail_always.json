@@ -19,7 +19,7 @@
 					{
 						"activity": "Fail1",
 						"dependencyConditions": [
-							"Skipped"
+							"Failed"
 						]
 					}
 				],
