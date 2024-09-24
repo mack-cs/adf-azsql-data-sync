@@ -25,7 +25,8 @@
 					"dataset": {
 						"referenceName": "ConfigTableAzSQLDataset",
 						"type": "DatasetReference"
-					}
+					},
+					"firstRowOnly": false
 				}
 			},
 			{
@@ -62,7 +63,7 @@
 								"source": {
 									"type": "AzureSqlSource",
 									"sqlReaderQuery": {
-										"value": "@{concat('SELECT LastUpdateAt as OldLastUpdated, PrimaryKey1, PrimaryKey2\n  FROM ',item().SchemaName,'.',item().TableName)}",
+										"value": "@{concat('SELECT LastUpdateAt as OldLastUpdated, PrimaryKey1, PrimaryKey2\n  FROM [dbo].[CommandTableWK] WHERE TableName = ''',item().TableName,'''',';')}",
 										"type": "Expression"
 									},
 									"queryTimeout": "02:00:00",
@@ -113,7 +114,7 @@
 							}
 						},
 						{
-							"name": "Copy data1",
+							"name": "CopyEachTable",
 							"type": "Copy",
 							"dependsOn": [
 								{
@@ -141,7 +142,7 @@
 								"source": {
 									"type": "SqlServerSource",
 									"sqlReaderQuery": {
-										"value": "@{concat('SELECT * FROM ',item().SchemaName,'.',item().TableName, ' WHERE LastUpdated > ''', activity('GetLastUpdatedanKeysCT').output.firstRow.OldLastUpdated,'''', ' AND LastUpdated <=''',activity('GetLastUpdatedFromSource').output.LastUpdated, '''',';')}",
+										"value": "@concat('SELECT * FROM ',item().SchemaName,'.',item().TableName, ' WHERE LastUpdated > ''', activity('GetLastUpdatedanKeysCT').output.firstRow.OldLastUpdated,'''', ' AND LastUpdated <=''',activity('GetLastUpdatedFromSource').output.firstRow.LastUpdated, '''',';')",
 										"type": "Expression"
 									},
 									"queryTimeout": "02:00:00",
@@ -204,11 +205,11 @@
 							]
 						},
 						{
-							"name": "Stored procedure1",
+							"name": "UpdateLastUpatedDate",
 							"type": "SqlServerStoredProcedure",
 							"dependsOn": [
 								{
-									"activity": "Copy data1",
+									"activity": "CopyEachTable",
 									"dependencyConditions": [
 										"Succeeded"
 									]
