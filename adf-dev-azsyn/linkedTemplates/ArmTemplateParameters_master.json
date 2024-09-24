@@ -1,0 +1,42 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "adf-dev-azsyn"
+		},
+		"AzDataLakeStorage_LinkedService_accountKey": {
+			"value": ""
+		},
+		"AzureSqlDatabase1_password": {
+			"value": ""
+		},
+		"OnPremSQL_LinkedService_connectionString": {
+			"value": "Integrated Security=False;Data Source=DESKTOP-A4M8DQ8\\SQLEXPRESS;Initial Catalog=AdventureWorks2022;User ID=azsync"
+		},
+		"AzDataLakeStorage_LinkedService_properties_typeProperties_url": {
+			"value": "https://strgdeblob.dfs.core.windows.net/"
+		},
+		"AzureKeyVault1_properties_typeProperties_baseUrl": {
+			"value": "https://kv-rolebased.vault.azure.net/"
+		},
+		"AzureSqlDatabase1_properties_typeProperties_server": {
+			"value": "adventuresqlserveraz.database.windows.net"
+		},
+		"AzureSqlDatabase1_properties_typeProperties_database": {
+			"value": "azsql_adeventure"
+		},
+		"AzureSqlDatabase1_properties_typeProperties_userName": {
+			"value": "sqladmin"
+		},
+		"SHI-DataSyn_properties_typeProperties_linkedInfo_resourceId": {
+			"value": "/subscriptions/5f25df68-5a81-4a2e-9e20-0e9f07c87ab9/resourcegroups/de-sqlsync-azsa/providers/Microsoft.DataFactory/factories/adf-sqlsync-azsa/integrationruntimes/SHIR-DSYNC"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}
