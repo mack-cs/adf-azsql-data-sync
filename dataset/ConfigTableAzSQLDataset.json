@@ -1,0 +1,39 @@
+{
+	"name": "ConfigTableAzSQLDataset",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureSqlDatabase1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "SchemaName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "TableName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "LastUpdateAt",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "PrimaryKey1",
+				"type": "nvarchar"
+			},
+			{
+				"name": "PrimaryKey2",
+				"type": "nvarchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "CommandTableWK"
+		}
+	}
+}

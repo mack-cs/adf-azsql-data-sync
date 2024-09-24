@@ -2,6 +2,106 @@
 	"name": "onprem_to_azsql_copy_sync",
 	"properties": {
 		"description": "Pipeline to synchronize data from on-premises databases to Azure SQL, ensuring up-to-date data replication.",
+		"activities": [
+			{
+				"name": "GetAllTables",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "SELECT SchemaName, TableName\n  FROM [dbo].[CommandTableWK]",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "ConfigTableAzSQLDataset",
+						"type": "DatasetReference"
+					}
+				}
+			},
+			{
+				"name": "ForEachTable",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "GetAllTables",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('GetAllTables').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "GetLastUpdatedanKeysCT",
+							"type": "Lookup",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"sqlReaderQuery": {
+										"value": "@{concat('SELECT LastUpdateAt as OldLastUpdatedAt, PrimaryKey1, PrimaryKey2\n  FROM ',item().SchemaName,'.',item().TableName)}",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "ConfigTableAzSQLDataset",
+									"type": "DatasetReference"
+								}
+							}
+						},
+						{
+							"name": "GetLastUpdatedFromSource",
+							"type": "Lookup",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlServerSource",
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "OnGenericPremSQL_Dataset",
+									"type": "DatasetReference"
+								}
+							}
+						}
+					]
+				}
+			}
+		],
 		"annotations": []
 	}
 }

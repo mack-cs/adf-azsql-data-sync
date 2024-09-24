@@ -1,0 +1,30 @@
+{
+	"name": "OnGenericPremSQL_Dataset",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "OnPremSQL_LinkedService",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"TName": {
+				"type": "string"
+			},
+			"SName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": {
+				"value": "@dataset().SName",
+				"type": "Expression"
+			},
+			"table": {
+				"value": "@dataset().TName",
+				"type": "Expression"
+			}
+		}
+	}
+}
