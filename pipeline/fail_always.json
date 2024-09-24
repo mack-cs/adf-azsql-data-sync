@@ -1,0 +1,18 @@
+{
+	"name": "fail_always",
+	"properties": {
+		"activities": [
+			{
+				"name": "Fail1",
+				"type": "Fail",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"message": "Pipeline Failure",
+					"errorCode": "1009"
+				}
+			}
+		],
+		"annotations": []
+	}
+}
