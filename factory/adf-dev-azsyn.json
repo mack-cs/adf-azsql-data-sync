@@ -1,0 +1,9 @@
+{
+	"name": "adf-dev-azsyn",
+	"location": "southafricanorth",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "95cd445f-167b-4335-8adc-45bde1f72897",
+		"tenantId": "945935e2-1b6b-41f2-856f-60fd1936182a"
+	}
+}
