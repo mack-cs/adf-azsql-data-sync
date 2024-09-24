@@ -62,7 +62,7 @@
 								"source": {
 									"type": "AzureSqlSource",
 									"sqlReaderQuery": {
-										"value": "@{concat('SELECT LastUpdateAt as OldLastUpdatedAt, PrimaryKey1, PrimaryKey2\n  FROM ',item().SchemaName,'.',item().TableName)}",
+										"value": "@{concat('SELECT LastUpdateAt as OldLastUpdated, PrimaryKey1, PrimaryKey2\n  FROM ',item().SchemaName,'.',item().TableName)}",
 										"type": "Expression"
 									},
 									"queryTimeout": "02:00:00",
@@ -89,13 +89,161 @@
 							"typeProperties": {
 								"source": {
 									"type": "SqlServerSource",
+									"sqlReaderQuery": {
+										"value": "@{concat('SELECT MAX(LastUpdated) AS LastUpdated FROM ',item().SchemaName,'.',item().TableName)}",
+										"type": "Expression"
+									},
 									"queryTimeout": "02:00:00",
 									"partitionOption": "None"
 								},
 								"dataset": {
 									"referenceName": "OnGenericPremSQL_Dataset",
-									"type": "DatasetReference"
+									"type": "DatasetReference",
+									"parameters": {
+										"TName": {
+											"value": "@item().TableName",
+											"type": "Expression"
+										},
+										"SName": {
+											"value": "@item().SchemaName",
+											"type": "Expression"
+										}
+									}
 								}
+							}
+						},
+						{
+							"name": "Copy data1",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "GetLastUpdatedanKeysCT",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								},
+								{
+									"activity": "GetLastUpdatedFromSource",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlServerSource",
+									"sqlReaderQuery": {
+										"value": "@{concat('SELECT * FROM ',item().SchemaName,'.',item().TableName, ' WHERE LastUpdated > ''', activity('GetLastUpdatedanKeysCT').output.firstRow.OldLastUpdated,'''', ' AND LastUpdated <=''',activity('GetLastUpdatedFromSource').output.LastUpdated, '''',';')}",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "AzureSqlSink",
+									"writeBehavior": "upsert",
+									"upsertSettings": {
+										"useTempDB": true,
+										"keys": {
+											"value": "@createArray(activity('GetLastUpdatedanKeysCT').output.firstRow.PrimaryKey1,activity('GetLastUpdatedanKeysCT').output.firstRow.PrimaryKey2)",
+											"type": "Expression"
+										}
+									},
+									"sqlWriterUseTableLock": false,
+									"disableMetricsCollection": false
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "OnGenericPremSQL_Dataset",
+									"type": "DatasetReference",
+									"parameters": {
+										"TName": {
+											"value": "@item().TableName",
+											"type": "Expression"
+										},
+										"SName": {
+											"value": "@item().SchemaName",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "AzSQL_Generic_Dataset",
+									"type": "DatasetReference",
+									"parameters": {
+										"DestSchema": {
+											"value": "@item().SchemaName",
+											"type": "Expression"
+										},
+										"DestTable": {
+											"value": "@item().TableName",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "Stored procedure1",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "Copy data1",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[UpdateCommandTableWK]",
+								"storedProcedureParameters": {
+									"LastUpdatedTimestamp": {
+										"value": {
+											"value": "@activity('GetLastUpdatedFromSource').output.firstRow.LastUpdated",
+											"type": "Expression"
+										},
+										"type": "DateTime"
+									},
+									"TableName": {
+										"value": {
+											"value": "@item().TableName",
+											"type": "Expression"
+										},
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "AzureSqlDatabase1",
+								"type": "LinkedServiceReference"
 							}
 						}
 					]

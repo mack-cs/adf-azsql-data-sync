@@ -1,0 +1,30 @@
+{
+	"name": "AzSQL_Generic_Dataset",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureSqlDatabase1",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"DestSchema": {
+				"type": "string"
+			},
+			"DestTable": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": {
+				"value": "@dataset().DestSchema",
+				"type": "Expression"
+			},
+			"table": {
+				"value": "@dataset().DestTable",
+				"type": "Expression"
+			}
+		}
+	}
+}
