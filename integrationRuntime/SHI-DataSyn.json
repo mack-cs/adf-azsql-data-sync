@@ -1,0 +1,12 @@
+{
+	"name": "SHI-DataSyn",
+	"properties": {
+		"type": "SelfHosted",
+		"typeProperties": {
+			"linkedInfo": {
+				"resourceId": "/subscriptions/5f25df68-5a81-4a2e-9e20-0e9f07c87ab9/resourcegroups/de-sqlsync-azsa/providers/Microsoft.DataFactory/factories/adf-sqlsync-azsa/integrationruntimes/SHIR-DSYNC",
+				"authorizationType": "Rbac"
+			}
+		}
+	}
+}
