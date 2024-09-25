@@ -150,17 +150,13 @@
 									"partitionOption": "None"
 								},
 								"sink": {
-									"type": "AzureSqlSink",
-									"writeBehavior": "upsert",
-									"upsertSettings": {
-										"useTempDB": true,
-										"keys": {
-											"value": "@createArray(activity('GetLastUpdatedanKeysCT').output.firstRow.PrimaryKey1,activity('GetLastUpdatedanKeysCT').output.firstRow.PrimaryKey2)",
-											"type": "Expression"
-										}
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
 									},
-									"sqlWriterUseTableLock": false,
-									"disableMetricsCollection": false
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
 								},
 								"enableStaging": false,
 								"translator": {
@@ -190,14 +186,14 @@
 							],
 							"outputs": [
 								{
-									"referenceName": "AzSQL_Generic_Dataset",
+									"referenceName": "ParquetTables",
 									"type": "DatasetReference",
 									"parameters": {
-										"DestSchema": {
+										"dataset_schemaname": {
 											"value": "@item().SchemaName",
 											"type": "Expression"
 										},
-										"DestTable": {
+										"dataset_tablename": {
 											"value": "@item().TableName",
 											"type": "Expression"
 										}
