@@ -57,6 +57,81 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/teams_alerts')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "TeamsAlertWebHook",
+						"type": "WebActivity",
+						"dependsOn": [
+							{
+								"activity": "Set Message",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "POST",
+							"headers": {
+								"Content-Type": "application/json"
+							},
+							"url": "https://mackcsl.webhook.office.com/webhookb2/bed6b26f-1474-4412-8190-873c09ff5b99@bc807e2e-e215-4b63-a4c0-a9b29100a4f0/IncomingWebhook/8b995b6d5c6e47fc9fa528e529772ac4/230833f5-4413-4790-bcf3-ecb08d69f194",
+							"body": {
+								"value": "@json(variables('messageCard'))",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Set Message",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "messageCard",
+							"value": {
+								"value": "{\n    \"@type\": \"MessageCard\",\n    \"@context\": \"http://schema.org/extensions\",\n    \"themeColor\": \"007607\",\n    \"summary\": \"Data Sync Alert\",\n    \"sections\": [\n        {\n            \"title\": \"Pipeline execution alert\",\n            \"facts\": [\n                {\n                    \"name\": \"Pipeline Name:\",\n                    \"value\": \"@{pipeline().parameters.pipeline_name}\"\n                },\n                {\n                    \"name\": \"Message\",\n                    \"value\": \"@{pipeline().parameters.message}\"\n                }\n            ],\n            \"markdown\": true\n        }\n    ]\n}",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pipeline_name": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"messageCard": {
+						"type": "String"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/AzDataLakeStorage_LinkedService')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -122,6 +197,65 @@
 				}
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/fail_always')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Fail1",
+						"type": "Fail",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"message": "Pipeline Failure",
+							"errorCode": "1009"
+						}
+					},
+					{
+						"name": "Execute Pipeline1",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Fail1",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "teams_alerts",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"pipeline_name": {
+									"value": "@pipeline().Pipeline",
+									"type": "Expression"
+								},
+								"message": {
+									"value": "@activity('Fail1').output.message",
+									"type": "Expression"
+								}
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/teams_alerts')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/AzSQL_Generic_Dataset')]",
@@ -316,6 +450,7 @@
 								"value": "@activity('GetAllTables').output.value",
 								"type": "Expression"
 							},
+							"isSequential": false,
 							"activities": [
 								{
 									"name": "GetLastUpdatedanKeysCT",
@@ -413,7 +548,7 @@
 										"source": {
 											"type": "SqlServerSource",
 											"sqlReaderQuery": {
-												"value": "@concat('SELECT * FROM ',item().SchemaName,'.',item().TableName, ' WHERE LastUpdated > ''', activity('GetLastUpdatedanKeysCT').output.firstRow.OldLastUpdated,'''', ' AND LastUpdated <=''',activity('GetLastUpdatedFromSource').output.firstRow.LastUpdated, '''',';')",
+												"value": "@concat('SELECT * FROM n',item().SchemaName,'.',item().TableName, ' WHERE LastUpdated > ''', activity('GetLastUpdatedanKeysCT').output.firstRow.OldLastUpdated,'''', ' AND LastUpdated <=''',activity('GetLastUpdatedFromSource').output.firstRow.LastUpdated, '''',';')",
 												"type": "Expression"
 											},
 											"queryTimeout": "02:00:00",
@@ -670,6 +805,36 @@
 								}
 							]
 						}
+					},
+					{
+						"name": "AlertInTeams",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "ForEachTable",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "teams_alerts",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"pipeline_name": {
+									"value": "@pipeline().Pipeline",
+									"type": "Expression"
+								},
+								"message": "'Execution failed. Attention required!'"
+							}
+						}
 					}
 				],
 				"policy": {
@@ -679,6 +844,7 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/ConfigTableAzSQLDataset')]",
+				"[concat(variables('factoryId'), '/pipelines/teams_alerts')]",
 				"[concat(variables('factoryId'), '/datasets/OnGenericPremSQL_Dataset')]",
 				"[concat(variables('factoryId'), '/datasets/AzSQL_Generic_Dataset')]",
 				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
@@ -690,7 +856,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"annotations": [],
-				"runtimeState": "Started",
+				"runtimeState": "Stopped",
 				"pipelines": [
 					{
 						"pipelineReference": {
