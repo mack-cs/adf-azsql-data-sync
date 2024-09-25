@@ -922,7 +922,7 @@
 						"type": "DatabricksNotebook",
 						"dependsOn": [
 							{
-								"activity": "AlertInTeams",
+								"activity": "ForEachTable",
 								"dependencyConditions": [
 									"Succeeded"
 								]
