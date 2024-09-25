@@ -24,6 +24,10 @@
 			"type": "string",
 			"defaultValue": "https://strgdeblob.dfs.core.windows.net/"
 		},
+		"AzureDatabricks1_properties_typeProperties_existingClusterId": {
+			"type": "string",
+			"defaultValue": "0925-130627-a57ulohj"
+		},
 		"AzureKeyVault1_properties_typeProperties_baseUrl": {
 			"type": "string",
 			"defaultValue": "https://kv-rolebased.vault.azure.net/"
@@ -43,10 +47,6 @@
 		"SHI-DataSyn_properties_typeProperties_linkedInfo_resourceId": {
 			"type": "string",
 			"defaultValue": "/subscriptions/5f25df68-5a81-4a2e-9e20-0e9f07c87ab9/resourcegroups/de-sqlsync-azsa/providers/Microsoft.DataFactory/factories/adf-sqlsync-azsa/integrationruntimes/SHIR-DSYNC"
-		},
-		"AzureDatabricks1_properties_typeProperties_existingClusterId": {
-			"type": "string",
-			"defaultValue": "0925-130627-a57ulohj"
 		}
 	},
 	"variables": {
@@ -544,6 +544,60 @@
 								"message": "'Execution failed. Attention required!'"
 							}
 						}
+					},
+					{
+						"name": "Bronze to Silver",
+						"type": "DatabricksNotebook",
+						"dependsOn": [
+							{
+								"activity": "AlertInTeams",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Users/welcomeshonai@firstseedbiz.onmicrosoft.com/BronzeToSilver"
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureDatabricks1",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Silver To Gold",
+						"type": "DatabricksNotebook",
+						"dependsOn": [
+							{
+								"activity": "Bronze to Silver",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Users/welcomeshonai@firstseedbiz.onmicrosoft.com/SilverToGold"
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureDatabricks1",
+							"type": "LinkedServiceReference"
+						}
 					}
 				],
 				"policy": {
@@ -554,6 +608,7 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/ConfigTableAzSQLDataset')]",
 				"[concat(variables('factoryId'), '/pipelines/teams_alerts')]",
+				"[concat(variables('factoryId'), '/linkedServices/AzureDatabricks1')]",
 				"[concat(variables('factoryId'), '/datasets/OnGenericPremSQL_Dataset')]",
 				"[concat(variables('factoryId'), '/datasets/ParquetTables')]",
 				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
@@ -823,6 +878,30 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/AzureDatabricks1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDatabricks",
+				"typeProperties": {
+					"domain": "https://adb-3781351180452189.9.azuredatabricks.net",
+					"accessToken": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "AzureKeyVault1",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "dbr-token"
+					},
+					"existingClusterId": "[parameters('AzureDatabricks1_properties_typeProperties_existingClusterId')]"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureKeyVault1')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/AzureKeyVault1')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -930,30 +1009,6 @@
 				}
 			},
 			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/AzureDatabricks1')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "AzureDatabricks",
-				"typeProperties": {
-					"domain": "https://adb-3781351180452189.9.azuredatabricks.net",
-					"accessToken": {
-						"type": "AzureKeyVaultSecret",
-						"store": {
-							"referenceName": "AzureKeyVault1",
-							"type": "LinkedServiceReference"
-						},
-						"secretName": "dbr-token"
-					},
-					"existingClusterId": "[parameters('AzureDatabricks1_properties_typeProperties_existingClusterId')]"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureKeyVault1')]"
-			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/default')]",
