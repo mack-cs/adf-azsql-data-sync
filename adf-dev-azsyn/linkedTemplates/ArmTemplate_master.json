@@ -44,6 +44,10 @@
 			"type": "string",
 			"defaultValue": "/subscriptions/5f25df68-5a81-4a2e-9e20-0e9f07c87ab9/resourcegroups/de-sqlsync-azsa/providers/Microsoft.DataFactory/factories/adf-sqlsync-azsa/integrationruntimes/SHIR-DSYNC"
 		},
+		"AzureDatabricks1_properties_typeProperties_existingClusterId": {
+			"type": "string",
+			"defaultValue": "0925-130627-a57ulohj"
+		},
 		"containerUri": {
 			"type": "string",
 			"metadata": "URI to storage account containing linked ARM templates"
@@ -97,6 +101,9 @@
 					},
 					"SHI-DataSyn_properties_typeProperties_linkedInfo_resourceId": {
 						"value": "[parameters('SHI-DataSyn_properties_typeProperties_linkedInfo_resourceId')]"
+					},
+					"AzureDatabricks1_properties_typeProperties_existingClusterId": {
+						"value": "[parameters('AzureDatabricks1_properties_typeProperties_existingClusterId')]"
 					}
 				}
 			},
