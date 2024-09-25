@@ -46,6 +46,7 @@
 						"value": "@activity('GetAllTables').output.value",
 						"type": "Expression"
 					},
+					"isSequential": false,
 					"activities": [
 						{
 							"name": "GetLastUpdatedanKeysCT",
@@ -142,7 +143,7 @@
 								"source": {
 									"type": "SqlServerSource",
 									"sqlReaderQuery": {
-										"value": "@concat('SELECT * FROM ',item().SchemaName,'.',item().TableName, ' WHERE LastUpdated > ''', activity('GetLastUpdatedanKeysCT').output.firstRow.OldLastUpdated,'''', ' AND LastUpdated <=''',activity('GetLastUpdatedFromSource').output.firstRow.LastUpdated, '''',';')",
+										"value": "@concat('SELECT * FROM n',item().SchemaName,'.',item().TableName, ' WHERE LastUpdated > ''', activity('GetLastUpdatedanKeysCT').output.firstRow.OldLastUpdated,'''', ' AND LastUpdated <=''',activity('GetLastUpdatedFromSource').output.firstRow.LastUpdated, '''',';')",
 										"type": "Expression"
 									},
 									"queryTimeout": "02:00:00",
@@ -398,6 +399,36 @@
 							}
 						}
 					]
+				}
+			},
+			{
+				"name": "AlertInTeams",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "ForEachTable",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "teams_alerts",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"pipeline_name": {
+							"value": "@pipeline().Pipeline",
+							"type": "Expression"
+						},
+						"message": "'Execution failed. Attention required!'"
+					}
 				}
 			}
 		],
