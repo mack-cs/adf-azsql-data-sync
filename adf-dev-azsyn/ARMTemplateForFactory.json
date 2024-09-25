@@ -264,17 +264,13 @@
 											"partitionOption": "None"
 										},
 										"sink": {
-											"type": "AzureSqlSink",
-											"writeBehavior": "upsert",
-											"upsertSettings": {
-												"useTempDB": true,
-												"keys": {
-													"value": "@createArray(activity('GetLastUpdatedanKeysCT').output.firstRow.PrimaryKey1,activity('GetLastUpdatedanKeysCT').output.firstRow.PrimaryKey2)",
-													"type": "Expression"
-												}
+											"type": "ParquetSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
 											},
-											"sqlWriterUseTableLock": false,
-											"disableMetricsCollection": false
+											"formatSettings": {
+												"type": "ParquetWriteSettings"
+											}
 										},
 										"enableStaging": false,
 										"translator": {
@@ -304,14 +300,14 @@
 									],
 									"outputs": [
 										{
-											"referenceName": "AzSQL_Generic_Dataset",
+											"referenceName": "ParquetTables",
 											"type": "DatasetReference",
 											"parameters": {
-												"DestSchema": {
+												"dataset_schemaname": {
 													"value": "@item().SchemaName",
 													"type": "Expression"
 												},
-												"DestTable": {
+												"dataset_tablename": {
 													"value": "@item().TableName",
 													"type": "Expression"
 												}
@@ -555,7 +551,7 @@
 				"[concat(variables('factoryId'), '/datasets/ConfigTableAzSQLDataset')]",
 				"[concat(variables('factoryId'), '/pipelines/teams_alerts')]",
 				"[concat(variables('factoryId'), '/datasets/OnGenericPremSQL_Dataset')]",
-				"[concat(variables('factoryId'), '/datasets/AzSQL_Generic_Dataset')]",
+				"[concat(variables('factoryId'), '/datasets/ParquetTables')]",
 				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
 			]
 		},
@@ -746,6 +742,63 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/OnPremSQL_LinkedService')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ParquetTables')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzDataLakeStorage_LinkedService",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"dataset_schemaname": {
+						"type": "string"
+					},
+					"dataset_tablename": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@{concat(dataset().dataset_tablename,'.parquet')}",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@{concat(dataset().dataset_schemaname, '/',dataset().dataset_tablename)}",
+							"type": "Expression"
+						},
+						"fileSystem": "bronze"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": [
+					{
+						"name": "DepartmentID",
+						"type": "INT32"
+					},
+					{
+						"name": "Name",
+						"type": "UTF8"
+					},
+					{
+						"name": "GroupName",
+						"type": "UTF8"
+					},
+					{
+						"name": "ModifiedDate",
+						"type": "INT96"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzDataLakeStorage_LinkedService')]"
 			]
 		},
 		{
