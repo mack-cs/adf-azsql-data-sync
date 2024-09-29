@@ -1195,7 +1195,7 @@
 											"upsertSettings": {
 												"useTempDB": true,
 												"keys": {
-													"value": "@array(activity('GetTableMetadataFromConfig').output.PrimaryKey)",
+													"value": "@array(activity('GetTableMetadataFromConfig').output.firstRow.PrimaryKey)",
 													"type": "Expression"
 												}
 											},
