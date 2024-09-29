@@ -639,7 +639,7 @@
 						"typeProperties": {
 							"source": {
 								"type": "AzureSqlSource",
-								"sqlReaderQuery": "SELECT  Scr_Schema as SchemaName,TableName FROM shop.ConfigTable ORDER BY TableOrder ASC",
+								"sqlReaderQuery": "SELECT  SchemaName, TableName FROM stage.TableLoadOrder ORDER BY TableOrderNumber ASC",
 								"queryTimeout": "02:00:00",
 								"partitionOption": "None"
 							},
@@ -685,7 +685,7 @@
 										"source": {
 											"type": "AzureSqlSource",
 											"sqlReaderQuery": {
-												"value": "@{concat('SELECT Dst_Schema as DestSchemaName, PrimaryKey, LastModified AS OldLastModified FROM shop.ConfigTable WHERE TableName = ''',item().TableName,'''',';' )}",
+												"value": "@{concat('SELECT SchemaName as DestSchemaName, PrimaryKey1, PrimaryKey2, LastUpdated AS OldLastModified FROM stage.TableLoadOrder WHERE TableName = ''',item().TableName,'''',';' )}",
 												"type": "Expression"
 											},
 											"queryTimeout": "02:00:00",
@@ -714,7 +714,7 @@
 										"source": {
 											"type": "SqlServerSource",
 											"sqlReaderQuery": {
-												"value": "@{concat('SELECT MAX(LastModifiedDate) AS NewLastModified FROM ',item().SchemaName,'.',item().TableName)}",
+												"value": "@{concat('SELECT MAX(LastUpdateDate) AS NewLastModified FROM ',item().SchemaName,'.',item().TableName)}",
 												"type": "Expression"
 											},
 											"queryTimeout": "02:00:00",
@@ -829,9 +829,9 @@
 									},
 									"userProperties": [],
 									"typeProperties": {
-										"storedProcedureName": "[[dbo].[UpdateConfigTable_LastModified]",
+										"storedProcedureName": "[[dbo].[UpdateTableLoadOrder_UpdateDate]",
 										"storedProcedureParameters": {
-											"NewLastModified": {
+											"LastUpdated": {
 												"value": {
 													"value": "@activity('GetLastModifiedDateFromSource').output.firstRow.NewLastModified",
 													"type": "Expression"
@@ -1032,8 +1032,8 @@
 					}
 				],
 				"typeProperties": {
-					"schema": "shop",
-					"table": "ConfigTable"
+					"schema": "stage",
+					"table": "TableLoadOrder"
 				}
 			},
 			"dependsOn": [
