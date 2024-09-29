@@ -20,6 +20,10 @@
 			"metadata": "Secure string for 'connectionString' of 'OnPremSQL_LinkedService'",
 			"defaultValue": "Integrated Security=False;Data Source=DESKTOP-A4M8DQ8\\SQLEXPRESS;Initial Catalog=AdventureWorks2022;User ID=azsync"
 		},
+		"OnPremSqlShopLinkedService_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'OnPremSqlShopLinkedService'"
+		},
 		"AzDataLakeStorage_LinkedService_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://strgdeblob.dfs.core.windows.net/"
@@ -297,6 +301,24 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/AzSqlGetFromConfigDataSet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/ConfigTableAzSQLDataset')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -332,8 +354,8 @@
 					}
 				],
 				"typeProperties": {
-					"schema": "dbo",
-					"table": "CommandTableWK"
+					"schema": "shop",
+					"table": "ConfigTable"
 				}
 			},
 			"dependsOn": [
@@ -450,6 +472,25 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/OnPremSqlShopLinkedService')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "SqlServer",
+				"typeProperties": {
+					"connectionString": "[parameters('OnPremSqlShopLinkedService_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "SHI-DataSyn",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/SHI-DataSyn')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/OnGenericPremSQL_Dataset')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -482,6 +523,24 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/OnPremSQL_LinkedService')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/OnPremGenericSelectSourceDate_Dataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "OnPremSqlShopLinkedService",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [],
+				"typeProperties": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/OnPremSqlShopLinkedService')]"
 			]
 		},
 		{
@@ -983,6 +1042,256 @@
 				"[concat(variables('factoryId'), '/linkedServices/AzureDatabricks1')]",
 				"[concat(variables('factoryId'), '/datasets/OnGenericPremSQL_Dataset')]",
 				"[concat(variables('factoryId'), '/datasets/ParquetTables')]",
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ordered_incremental_pipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "GetAllTablesInConfig",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": "SELECT  Scr_Schema as SchemaName,TableName FROM shop.ConfigTable ORDER BY TableOrder ASC",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "ConfigTableAzSQLDataset",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "GetEachTableForEach",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "GetAllTablesInConfig",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('GetAllTablesInConfig').output.value",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "GetTableMetadataFromConfig",
+									"type": "Lookup",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "AzureSqlSource",
+											"sqlReaderQuery": {
+												"value": "@{concat('SELECT Dst_Schema as DestSchemaName, PrimaryKey, LastModified AS OldLastModified FROM shop.ConfigTable WHERE TableName = ''',item().TableName,'''',';' )}",
+												"type": "Expression"
+											},
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"dataset": {
+											"referenceName": "ConfigTableAzSQLDataset",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									}
+								},
+								{
+									"name": "GetLastModifiedDateFromSource",
+									"type": "Lookup",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "SqlServerSource",
+											"sqlReaderQuery": {
+												"value": "@{concat('SELECT MAX(LastModifiedDate) AS NewLastModified FROM ',item().SchemaName,'.',item().TableName)}",
+												"type": "Expression"
+											},
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"dataset": {
+											"referenceName": "OnPremGenericSelectSourceDate_Dataset",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									}
+								},
+								{
+									"name": "CopyEachTable",
+									"type": "Copy",
+									"dependsOn": [
+										{
+											"activity": "GetTableMetadataFromConfig",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										},
+										{
+											"activity": "GetLastModifiedDateFromSource",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "SqlServerSource",
+											"sqlReaderQuery": {
+												"value": "@{concat('SELECT * FROM ',item().SchemaName,'.',item().TableName,' WHERE LastModifiedDate > ''', activity('GetTableMetadataFromConfig').output.firstRow.OldLastiModified,'''',' AND LastModifiedDate <= ''',activity('GetLastModifiedDateFromSource').output.firstRow.NewLastModified,'''',';')}",
+												"type": "Expression"
+											},
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "AzureSqlSink",
+											"writeBehavior": "upsert",
+											"upsertSettings": {
+												"useTempDB": true,
+												"keys": {
+													"value": "@array(activity('GetTableMetadataFromConfig').output.PrimaryKey)",
+													"type": "Expression"
+												}
+											},
+											"sqlWriterUseTableLock": false,
+											"disableMetricsCollection": false
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "OnPremGenericSelectSourceDate_Dataset",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "AzSQL_Generic_Dataset",
+											"type": "DatasetReference",
+											"parameters": {
+												"DestSchema": {
+													"value": "@activity('GetTableMetadataFromConfig').output.firstRow.DestSchemaName",
+													"type": "Expression"
+												},
+												"DestTable": {
+													"value": "@item().TableName",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								},
+								{
+									"name": "Update Config Table",
+									"type": "SqlServerStoredProcedure",
+									"dependsOn": [
+										{
+											"activity": "CopyEachTable",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"storedProcedureName": "[[dbo].[UpdateConfigTable_LastModified]",
+										"storedProcedureParameters": {
+											"NewLastModified": {
+												"value": {
+													"value": "@activity('GetLastModifiedDateFromSource').output.firstRow.NewLastModified",
+													"type": "Expression"
+												},
+												"type": "DateTime"
+											},
+											"TableName": {
+												"value": {
+													"value": "@item().TableName",
+													"type": "Expression"
+												},
+												"type": "String"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "AzureSqlDatabase1",
+										"type": "LinkedServiceReference"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ConfigTableAzSQLDataset')]",
+				"[concat(variables('factoryId'), '/datasets/OnPremGenericSelectSourceDate_Dataset')]",
+				"[concat(variables('factoryId'), '/datasets/AzSQL_Generic_Dataset')]",
 				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
 			]
 		},

@@ -14,6 +14,9 @@
 		"OnPremSQL_LinkedService_connectionString": {
 			"value": "Integrated Security=False;Data Source=DESKTOP-A4M8DQ8\\SQLEXPRESS;Initial Catalog=AdventureWorks2022;User ID=azsync"
 		},
+		"OnPremSqlShopLinkedService_connectionString": {
+			"value": ""
+		},
 		"AzDataLakeStorage_LinkedService_properties_typeProperties_url": {
 			"value": "https://strgdeblob.dfs.core.windows.net/"
 		},

@@ -20,6 +20,10 @@
 			"metadata": "Secure string for 'connectionString' of 'OnPremSQL_LinkedService'",
 			"defaultValue": "Integrated Security=False;Data Source=DESKTOP-A4M8DQ8\\SQLEXPRESS;Initial Catalog=AdventureWorks2022;User ID=azsync"
 		},
+		"OnPremSqlShopLinkedService_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'OnPremSqlShopLinkedService'"
+		},
 		"AzDataLakeStorage_LinkedService_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://strgdeblob.dfs.core.windows.net/"
@@ -83,6 +87,9 @@
 					},
 					"OnPremSQL_LinkedService_connectionString": {
 						"value": "[parameters('OnPremSQL_LinkedService_connectionString')]"
+					},
+					"OnPremSqlShopLinkedService_connectionString": {
+						"value": "[parameters('OnPremSqlShopLinkedService_connectionString')]"
 					},
 					"AzDataLakeStorage_LinkedService_properties_typeProperties_url": {
 						"value": "[parameters('AzDataLakeStorage_LinkedService_properties_typeProperties_url')]"
