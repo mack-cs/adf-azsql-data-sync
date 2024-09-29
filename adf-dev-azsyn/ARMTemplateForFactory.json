@@ -756,7 +756,7 @@
 										"source": {
 											"type": "SqlServerSource",
 											"sqlReaderQuery": {
-												"value": "@{concat('SELECT * FROM ',item().SchemaName,'.',item().TableName,' WHERE LastModifiedDate > ''', activity('GetTableMetadataFromConfig').output.firstRow.OldLastModified,'''',' AND LastModifiedDate <= ''',activity('GetLastModifiedDateFromSource').output.firstRow.NewLastModified,'''',';')}",
+												"value": "@{concat('SELECT * FROM ',item().SchemaName,'.',item().TableName,' WHERE LastUpdateDate > ''', activity('GetTableMetadataFromConfig').output.firstRow.OldLastModified,'''',' AND LastUpdateDate <= ''',activity('GetLastModifiedDateFromSource').output.firstRow.NewLastModified,'''',';')}",
 												"type": "Expression"
 											},
 											"queryTimeout": "02:00:00",
