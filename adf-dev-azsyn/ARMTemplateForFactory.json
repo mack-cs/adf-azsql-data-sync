@@ -768,7 +768,7 @@
 											"upsertSettings": {
 												"useTempDB": true,
 												"keys": {
-													"value": "@createArray(activity('GetTableMetadataFromConfig').output.firstRow.PrimaryKey1, activity('GetTableMetadataFromConfig').output.firstRow.PrimaryKey2)",
+													"value": "@{if(not(equals(activity('GetTableMetadataFromConfig').output.firstRow.PrimaryKey2, null)), createArray(activity('GetTableMetadataFromConfig').output.firstRow.PrimaryKey1, activity('GetTableMetadataFromConfig').output.firstRow.PrimaryKey2), createArray(activity('GetTableMetadataFromConfig').output.firstRow.PrimaryKey1))}\n",
 													"type": "Expression"
 												}
 											},
