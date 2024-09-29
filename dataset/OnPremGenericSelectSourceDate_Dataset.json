@@ -1,0 +1,12 @@
+{
+	"name": "OnPremGenericSelectSourceDate_Dataset",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "OnPremSqlShopLinkedService",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": []
+	}
+}
