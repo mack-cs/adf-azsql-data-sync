@@ -32,8 +32,8 @@
 			}
 		],
 		"typeProperties": {
-			"schema": "shop",
-			"table": "ConfigTable"
+			"schema": "stage",
+			"table": "TableLoadOrder"
 		}
 	}
 }
