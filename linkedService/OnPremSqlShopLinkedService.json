@@ -1,0 +1,16 @@
+{
+	"name": "OnPremSqlShopLinkedService",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "SqlServer",
+		"typeProperties": {
+			"connectionString": "integrated security=False;data source=DESKTOP-A4M8DQ8\\SQLEXPRESS;initial catalog=ecommerce;user id=data_sync",
+			"encryptedCredential": "eyJDcmVkZW50aWFsSWQiOiI2YjY5NjVhOS00ZTYxLTQxMTQtOTk3Yi01NmIzZGQ2ZWYyMDMiLCJWZXJzaW9uIjoiMi4wIiwiQ2xhc3NUeXBlIjoiTWljcm9zb2Z0LkRhdGFQcm94eS5Db3JlLkludGVyU2VydmljZURhdGFDb250cmFjdC5DcmVkZW50aWFsU1UwNkNZMTQifQ=="
+		},
+		"connectVia": {
+			"referenceName": "SHI-DataSyn",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}
